@@ -1,0 +1,15 @@
+typedef enum reg [6:0] 
+{
+  LEFT_LINE_IN        = 7'b000_0000,
+  RIGHT_LINE_IN       = 7'b000_0001,
+  LEFT_HEADPHONE_OUT  = 7'b000_0010,
+  RIGHT_HEADPHONE_OUT = 7'b000_0011,
+  ANA_PATH_CONTROL    = 7'b000_0100,
+  DIG_PATH_CONTROL    = 7'b000_0101,
+  POWER_CONTROL       = 7'b000_0110,
+  DIG_FORMAT          = 7'b000_0111,
+  SAMPLING_CONTROL    = 7'b000_1000,
+  ACTIVE_CONTROL      = 7'b000_1001,
+  RESET               = 7'b000_1111
+} wm8731_register;
+

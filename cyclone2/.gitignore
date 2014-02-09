@@ -1,0 +1,7 @@
+db/
+incremental_db/
+incremental_files/
+output_files/
+
+*.qpf
+*.qsf
