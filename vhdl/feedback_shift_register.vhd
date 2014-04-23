@@ -34,10 +34,10 @@ begin
         if (ENABLE = '1') then        
           if (DIRECTION = '1') then
             BITS_REG                <= BITS_REG sll 1; 
-            BITS_REG(BITS_REG'low)  <= NEXT_BIT;
+            BITS_REG(BITS_REG'right)  <= NEXT_BIT;
           else
             BITS_REG                <= BITS_REG srl 1;
-            BITS_REG(BITS_REG'high) <= NEXT_BIT;
+            BITS_REG(BITS_REG'left) <= NEXT_BIT;
           end if;
         else 
           BITS_REG <= BITS_REG;
