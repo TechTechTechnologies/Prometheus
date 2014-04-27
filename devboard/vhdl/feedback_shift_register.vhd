@@ -7,7 +7,7 @@ entity FEEDBACK_SHIFT_REGISTER is
   generic
   (
     DEPTH  : natural range 2 to natural'high := 8;
-    SEED   : std_logic_vector;
+    SEED   : std_logic_vector
   );
   port
   (
@@ -22,32 +22,53 @@ entity FEEDBACK_SHIFT_REGISTER is
 end entity FEEDBACK_SHIFT_REGISTER;
 
 architecture BEHAVIORAL of FEEDBACK_SHIFT_REGISTER is
-  signal BITS_REG : std_logic_vector(BITS'range) := SEED;
+  signal BITS_I : std_logic_vector(BITS'range) := SEED;
   signal NEXT_BIT : std_logic := '0';
+  
+  component SHIFT_REGISTER is
+    generic
+    (
+      INIT           : std_logic_vector;
+	   DIRECTIONALITY : integer range -1 to 1 := 0
+    );
+    port
+    (
+      CLOCK     : in  std_logic;
+	   RESET     : in  std_logic;
+		
+	   LOAD      : in  std_logic;
+		BITS_IN   : in  std_logic_vector(INIT'range);
+		
+	   STEP      : in  std_logic;
+	   DIRECTION : in  std_logic;
+	   BITS_OUT  : out std_logic_vector(INIT'range) := INIT;
+	   NEXT_BIT  : in  std_logic
+    );
+  end component SHIFT_REGISTER;
 begin
   
-  NEXT_BIT <= xor_reduce(BITS_REG and TAPS);
-  BITS     <= BITS_REG;
-  SHIFT_REGISTER : process (CLOCK) is
-  begin
-    if (rising_edge(CLOCK)) then
-      if (RESET = '1') then
-        BITS_REG <= SEED;
-      else
-        if (ENABLE = '1') then        
-          if (DIRECTION = '1') then
-            BITS_REG                 <= std_logic_vector(unsigned(BITS_REG) sll 1); 
-            BITS_REG(BITS_REG'right) <= NEXT_BIT;
-          else
-            BITS_REG                 <= std_logic_vector(unsigned(BITS_REG) srl 1); 
-            BITS_REG(BITS_REG'left)  <= NEXT_BIT;
-          end if;
-        else 
-          BITS_REG <= BITS_REG;
-        end if;
-      end if;
-    end if;
-  end process SHIFT_REGISTER;
+  NEXT_BIT <= xor_reduce(BITS_I and TAPS);
+  BITS     <= BITS_I;
+  
+  SHIFTER : SHIFT_REGISTER 
+    generic map
+	 (
+	   INIT           => SEED,
+		DIRECTIONALITY => 0
+	 )
+	 port map
+	 (
+	   CLOCK     => CLOCK,
+		RESET     => RESET,
+		
+		LOAD      => '0',
+		BITS_IN   => SEED,
+		
+		STEP      => ENABLE,
+		DIRECTION => DIRECTION,
+		BITS_OUT  => BITS_I,
+		NEXT_BIT  => NEXT_BIT
+	 );
 
 end architecture BEHAVIORAL;
 
