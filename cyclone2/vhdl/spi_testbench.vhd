@@ -28,11 +28,11 @@ architecture SIMULATION of SPI_TESTBENCH is
       SERIAL_WIDTH    : natural range 1 to 32 := 8;
       PARALLEL_WIDTH  : natural range 1 to 32 := 8;
       WORDS           : natural range 1 to natural'high := 2;
-    
+
       CLOCK_DIVIDER   : natural range 1 to natural'high := 1;
       CLOCK_POLARITY  : std_logic := '0';
       ENABLE_POLARITY : std_logic := '0';
-	 
+
       MASTER          : boolean   := true;
       LSB_FIRST       : std_logic := '1'
     );
@@ -61,16 +61,16 @@ begin
   process (CLOCK) is
   begin
     if (rising_edge(CLOCK)) then
-	   if (RESET = '1') then
-		  SERIAL_MISO <= '0';
-		else
-		  if (SERIAL_CLOCK = '0') then
-		    SERIAL_MISO <= not(SERIAL_MISO);
-		  else
-		    SERIAL_MISO <= SERIAL_MISO;
-		  end if;
-		end if;
-	 end if;
+      if (RESET = '1') then
+        SERIAL_MISO <= '0';
+      else
+        if (SERIAL_CLOCK = '0') then
+          SERIAL_MISO <= not(SERIAL_MISO);
+        else
+          SERIAL_MISO <= SERIAL_MISO;
+        end if;
+      end if;
+    end if;
   end process TOGGLE_MISO;
   
   STROBE_VALID :
@@ -79,10 +79,10 @@ begin
     if (rising_edge(CLOCK)) then
       if (RESET = '1') then 
         WORD_SENDABLE <= '0';
-	   else
-	     WORD_SENDABLE <= READY_FOR_DATA;
-	   end if;
-	 end if;
+      else
+        WORD_SENDABLE <= READY_FOR_DATA;
+      end if;
+    end if;
   end process STROBE_VALID;
   OUTGOING_WORD_VALID <= WORD_SENDABLE and READY_FOR_DATA;
   OUTGOING_WORD       <= X"A5";
@@ -98,7 +98,7 @@ begin
       CLOCK_DIVIDER   => 1,
       CLOCK_POLARITY  => '0',
       ENABLE_POLARITY => '0',
-	 
+
       MASTER          => true,
       LSB_FIRST       => '1'
     )
@@ -119,3 +119,4 @@ begin
     );
   
 end architecture SIMULATION;
+

@@ -15,9 +15,9 @@ architecture BEHAVIORAL of LFSR_TESTBENCH is
 
   component FEEDBACK_SHIFT_REGISTER is
     generic
-	 (
-	   SEED : std_logic_vector(7 downto 0)
-	 );
+    (
+      SEED : std_logic_vector(7 downto 0)
+    );
     port
     (
       CLOCK     : in  std_logic;
@@ -36,9 +36,9 @@ begin
   
   LFSR : FEEDBACK_SHIFT_REGISTER 
     generic map
-	 (
-	   SEED      => X"FF"
-	 )
+    (
+      SEED      => X"FF"
+    )
     port map
     (
       CLOCK     => CLOCK,

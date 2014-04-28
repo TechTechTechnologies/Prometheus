@@ -65,20 +65,20 @@ architecture BEHAVIORAL of SPI_SERDES is
     generic
     (
       INIT           : std_logic_vector;
-	   DIRECTIONALITY : integer range -1 to 1
+      DIRECTIONALITY : integer range -1 to 1
     );
     port
     (
       CLOCK     : in  std_logic;
-	   RESET     : in  std_logic;
-	 
-	   LOAD      : in  std_logic;
-	   BITS_IN   : in  std_logic_vector(INIT'range);
-	 
-	   STEP      : in  std_logic;
-		DIRECTION : in  std_logic;
-	   BITS_OUT  : out std_logic_vector(INIT'range) := INIT;
-	   NEXT_BIT  : in  std_logic
+      RESET     : in  std_logic;
+
+      LOAD      : in  std_logic;
+      BITS_IN   : in  std_logic_vector(INIT'range);
+
+      STEP      : in  std_logic;
+      DIRECTION : in  std_logic;
+      BITS_OUT  : out std_logic_vector(INIT'range) := INIT;
+      NEXT_BIT  : in  std_logic
     );
   end component SHIFT_REGISTER;
 begin
@@ -95,35 +95,35 @@ begin
       else
         case (PARALLEL_INTERFACE_STATE) is
           when IDLE  =>
-			   if (OUTGOING_WORD_VALID = '1') then
-				  PARALLEL_INTERFACE_STATE <= BUSY;
-				  WORD_REGISTER            <= OUTGOING_WORD;
-				else
-				  PARALLEL_INTERFACE_STATE <= IDLE;
-				end if;
-				
+            if (OUTGOING_WORD_VALID = '1') then
+              PARALLEL_INTERFACE_STATE <= BUSY;
+              WORD_REGISTER            <= OUTGOING_WORD;
+            else
+              PARALLEL_INTERFACE_STATE <= IDLE;
+            end if;
+
           when BUSY  =>
-			   if (SERIAL_BUSY = '1') then
-			     if (OUTGOING_WORD_VALID =  '1') then
+            if (SERIAL_BUSY = '1') then
+              if (OUTGOING_WORD_VALID =  '1') then
                 PARALLEL_INTERFACE_STATE <= FULL;
-					 WORD_REGISTER            <= OUTGOING_WORD;
-				  else 
-				    PARALLEL_INTERFACE_STATE <= BUSY;
-				  end if;
-				else
-				  PARALLEL_INTERFACE_STATE <= IDLE;
-				  if (OUTGOING_WORD_VALID =  '1') then
+                WORD_REGISTER            <= OUTGOING_WORD;
+              else 
+                PARALLEL_INTERFACE_STATE <= BUSY;
+              end if;
+            else
+              PARALLEL_INTERFACE_STATE <= IDLE;
+              if (OUTGOING_WORD_VALID =  '1') then
                 WORD_REGISTER <= OUTGOING_WORD;
-				  end if;
-				end if;
-				
+              end if;
+            end if;
+
           when FULL  =>
-			   if (SERIAL_BUSY = '0') then
-				  PARALLEL_INTERFACE_STATE <= IDLE;
-				else
-				  PARALLEL_INTERFACE_STATE <= FULL;
-				end if;
-				
+            if (SERIAL_BUSY = '0') then
+              PARALLEL_INTERFACE_STATE <= IDLE;
+            else
+              PARALLEL_INTERFACE_STATE <= FULL;
+            end if;
+
         end case;
       end if;
     end if;
@@ -133,8 +133,8 @@ begin
   process (RESET, PARALLEL_INTERFACE_STATE) is
   begin
     if (RESET = '1') then
-	   READY_FOR_DATA_I <= '0';
-		WORD_PENDING     <= '0';
+      READY_FOR_DATA_I <= '0';
+      WORD_PENDING     <= '0';
 	 else
 	   case (PARALLEL_INTERFACE_STATE) is
 		  when IDLE =>
@@ -161,129 +161,129 @@ begin
           
           CLOCK_COUNTER <= (others => '0');
           BIT_COUNTER   <= (others => '0');
-			 
-			 INCOMING_WORD_I <= (others => '0');
+
+          INCOMING_WORD_I <= (others => '0');
         else
           case (SERIAL_INTERFACE_STATE) is
             when IDLE =>
               if (WORD_PENDING = '1') then
                 SERIAL_INTERFACE_STATE <= CLK_LO;
-				  
-  				    LOAD_SHIFT_REGS        <= '1';
+                LOAD_SHIFT_REGS        <= '1';
               else
                 SERIAL_INTERFACE_STATE <= IDLE;
-					 
-				    LOAD_SHIFT_REGS        <= '0';
+                LOAD_SHIFT_REGS        <= '0';
               end if;
             when CLK_LO =>
               if (CLOCK_COUNTER = CLOCK_DIVIDER-1) then
-				    SERIAL_INTERFACE_STATE <= CLK_HI;
-        	       CLOCK_COUNTER          <= (others => '0');
-				  else
-	             SERIAL_INTERFACE_STATE <= CLK_LO;
-				    CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
-				  end if;
-				  LOAD_SHIFT_REGS <= '0';
+                SERIAL_INTERFACE_STATE <= CLK_HI;
+                CLOCK_COUNTER          <= (others => '0');
+              else
+                SERIAL_INTERFACE_STATE <= CLK_LO;
+                CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
+              end if;
+              LOAD_SHIFT_REGS <= '0';
             when CLK_HI =>
               if (CLOCK_COUNTER = CLOCK_DIVIDER-1) then
-				    if (BIT_COUNTER = PARALLEL_WIDTH-1) then
-					   SERIAL_INTERFACE_STATE <= IDLE;
-					   BIT_COUNTER <= (others => '0');
-						
-						INCOMING_WORD_I <= RX_BITS;
-					 else
-				      SERIAL_INTERFACE_STATE <= CLK_LO;
-					   BIT_COUNTER <= BIT_COUNTER + 1;
-					 end if;
-				    CLOCK_COUNTER          <= (others => '0');
-				  else
-				    SERIAL_INTERFACE_STATE <= CLK_HI;
-				    CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
-				  end if;
-				  LOAD_SHIFT_REGS <= '0';
+                if (BIT_COUNTER = PARALLEL_WIDTH-1) then
+                  SERIAL_INTERFACE_STATE <= IDLE;
+                  BIT_COUNTER <= (others => '0');
+
+                  INCOMING_WORD_I <= RX_BITS;
+                else
+                  SERIAL_INTERFACE_STATE <= CLK_LO;
+                  BIT_COUNTER <= BIT_COUNTER + 1;
+                end if;
+                CLOCK_COUNTER          <= (others => '0');
+              else
+                SERIAL_INTERFACE_STATE <= CLK_HI;
+                CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
+              end if;
+              LOAD_SHIFT_REGS <= '0';
           end case;
         end if;
       end if;
     end process SERIAL_INTERFACE;
-	
-	 SERIAL_ENABLE <= ENABLE_POLARITY when (SERIAL_BUSY = '1') 
-	                                  else not(ENABLE_POLARITY);
+
+    SERIAL_ENABLE <=      ENABLE_POLARITY 
+                     when (SERIAL_BUSY = '1') 
+                     else not(ENABLE_POLARITY);
     SERIAL_INTERFACE_COMBINATIONAL : 
     process (RESET, SERIAL_INTERFACE_STATE) is
     begin
-	   if (RESET = '1') then
-		  SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-		  SERIAL_BUSY     <= '0';
-		  STEP_SHIFT_REGS <= '0';
-		else
+      if (RESET = '1') then
+        SERIAL_CLOCK    <= not(CLOCK_POLARITY);
+        SERIAL_BUSY     <= '0';
+        STEP_SHIFT_REGS <= '0';
+      else
         case (SERIAL_INTERFACE_STATE) is
           when IDLE   =>
-  		      SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-				SERIAL_BUSY     <= '0';
-			   STEP_SHIFT_REGS <= '0';
-		    when CLK_LO =>
             SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-				SERIAL_BUSY     <= '1';
-  		      STEP_SHIFT_REGS <= '1';
-		    when CLK_HI =>
-		      SERIAL_CLOCK    <= CLOCK_POLARITY;
-			   SERIAL_BUSY     <= '1';
-  		      STEP_SHIFT_REGS <= '0';
-	     end case;
-		end if;
+            SERIAL_BUSY     <= '0';
+            STEP_SHIFT_REGS <= '0';
+          when CLK_LO =>
+            SERIAL_CLOCK    <= not(CLOCK_POLARITY);
+            SERIAL_BUSY     <= '1';
+            STEP_SHIFT_REGS <= '1';
+          when CLK_HI =>
+            SERIAL_CLOCK    <= CLOCK_POLARITY;
+            SERIAL_BUSY     <= '1';
+            STEP_SHIFT_REGS <= '0';
+        end case;
+      end if;
     end process SERIAL_INTERFACE_COMBINATIONAL;
-	 	
+
     GENERATE_LSB_FIRST :
     if (LSB_FIRST = '1') generate
       SERIAL_MOSI <= TX_BITS(TX_BITS'right);
     end generate GENERATE_LSB_FIRST;
-		
+
     GENERATE_MSB_FIRST :
     if (LSB_FIRST = '0') generate
       SERIAL_MOSI <= TX_BITS(TX_BITS'left);
     end generate GENERATE_MSB_FIRST;
   end generate GENERATE_SPI_MASTER;
-  
+
   OUTGOING_SHIFT_REGISTER : 
   SHIFT_REGISTER
     generic map
-	 (
-	   INIT           => (OUTGOING_WORD'range => '0'),
-		DIRECTIONALITY => OUTGOING_DIRECTIONALITY
-	 )
-	 port map
-	 (
-	   CLOCK     => CLOCK,
-		RESET     => RESET,
-		
-		LOAD      => LOAD_SHIFT_REGS,
-		BITS_IN   => WORD_REGISTER,
-		
-		STEP      => STEP_SHIFT_REGS,
-		DIRECTION => '0',
-		BITS_OUT  => TX_BITS,
-		NEXT_BIT  => '0'
-	 );
-	   
+    (
+      INIT           => (OUTGOING_WORD'range => '0'),
+      DIRECTIONALITY => OUTGOING_DIRECTIONALITY
+    )
+    port map
+    (   
+      CLOCK     => CLOCK,
+      RESET     => RESET,
+
+      LOAD      => LOAD_SHIFT_REGS,
+      BITS_IN   => WORD_REGISTER,
+
+      STEP      => STEP_SHIFT_REGS,
+      DIRECTION => '0',
+      BITS_OUT  => TX_BITS,
+      NEXT_BIT  => '0'
+    );
+
   INCOMING_SHIFT_REGISTER : 
   SHIFT_REGISTER
     generic map
-	 (
-	   INIT           => (INCOMING_WORD'range => '0'),
-		DIRECTIONALITY => -OUTGOING_DIRECTIONALITY
-	 )
-	 port map
-	 (
-	   CLOCK     => CLOCK,
-		RESET     => RESET,
-		
-		LOAD      => '0',
-		BITS_IN   => (others => '0'),
-		
-		STEP      => STEP_SHIFT_REGS,
-		DIRECTION => '0',
-		BITS_OUT  => RX_BITS,
-		NEXT_BIT  => SERIAL_MISO
-	 );
+    (
+      INIT           => (INCOMING_WORD'range => '0'),
+      DIRECTIONALITY => -OUTGOING_DIRECTIONALITY
+    )
+    port map
+    (
+      CLOCK     => CLOCK,
+      RESET     => RESET,
+
+      LOAD      => '0',
+      BITS_IN   => (others => '0'),
+
+      STEP      => STEP_SHIFT_REGS,
+      DIRECTION => '0',
+      BITS_OUT  => RX_BITS,
+      NEXT_BIT  => SERIAL_MISO
+    );
 
 end architecture BEHAVIORAL;
+
