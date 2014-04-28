@@ -1,0 +1,1 @@
+The Prometheus uses a common digital circuit in an unconventional way to create a simple and versatile electronic instrument. The performer manipulates the configuration of a Linear Feedback Shift Register (LFSR) to produce sounds ranging from pure tones to white noise.
