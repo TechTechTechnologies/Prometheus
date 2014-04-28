@@ -15,8 +15,8 @@ entity SPI_SERDES is
     CLOCK_DIVIDER   : natural range 1 to natural'high := 1;
     CLOCK_POLARITY  : std_logic := '0';
     ENABLE_POLARITY : std_logic := '0';
-	 
-	 MASTER          : boolean   := true;
+
+    MASTER          : boolean   := true;
     LSB_FIRST       : std_logic := '1'
   );
   port
@@ -135,19 +135,19 @@ begin
     if (RESET = '1') then
       READY_FOR_DATA_I <= '0';
       WORD_PENDING     <= '0';
-	 else
-	   case (PARALLEL_INTERFACE_STATE) is
-		  when IDLE =>
-	       READY_FOR_DATA_I <= '1';
-			 WORD_PENDING     <= '0';
-		  when BUSY =>
-	       READY_FOR_DATA_I <= '1';
-			 WORD_PENDING     <= '1';
-		  when FULL =>
-	       READY_FOR_DATA_I <= '0';
-			 WORD_PENDING     <= '1';
-		end case;
-	 end if;
+    else
+      case (PARALLEL_INTERFACE_STATE) is
+        when IDLE =>
+          READY_FOR_DATA_I <= '1';
+          WORD_PENDING     <= '0';
+        when BUSY =>
+          READY_FOR_DATA_I <= '1';
+          WORD_PENDING     <= '1';
+        when FULL =>
+          READY_FOR_DATA_I <= '0';
+          WORD_PENDING     <= '1';
+      end case;
+    end if;
   end process PARALLEL_INTERFACE_COMBINATIONAL;
   
   GENERATE_SPI_MASTER :
@@ -203,6 +203,10 @@ begin
         end if;
       end if;
     end process SERIAL_INTERFACE;
+
+    GENERATE_SPI_SLAVE :
+    if (not MASTER) generate -- TODO
+    end generate GENERATE_SPI_SLAVE;
 
     SERIAL_ENABLE <=      ENABLE_POLARITY 
                      when (SERIAL_BUSY = '1') 
