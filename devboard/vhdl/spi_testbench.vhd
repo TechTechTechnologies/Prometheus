@@ -11,10 +11,16 @@ architecture SIMULATION of SPI_TESTBENCH is
   signal CLOCK : std_logic := '0';
   signal RESET : std_logic := '1';
   
-  signal SERIAL_CLOCK  : std_logic;
-  signal SERIAL_ENABLE : std_logic;
-  signal SERIAL_MOSI   : std_logic;
-  signal SERIAL_MISO     : std_logic;
+  signal SERIAL_CLOCK   : std_logic := '0';
+  signal SERIAL_ENABLE  : std_logic := '1';
+  signal SERIAL_MOSI    : std_logic := '0';
+  signal SERIAL_MISO    : std_logic := '0';
+  
+  signal READY_FOR_DATA      : std_logic := '0';
+  signal WORD_SENDABLE       : std_logic := '0';
+  signal OUTGOING_WORD_VALID : std_logic := '0';
+  signal OUTGOING_WORD       : std_logic_vector(7 downto 0) := (others => '0');
+  signal INCOMING_WORD       : std_logic_vector(7 downto 0) := (others => '0');
   
   component SPI_SERDES is
     generic
@@ -43,7 +49,6 @@ architecture SIMULATION of SPI_TESTBENCH is
       READY_FOR_DATA      : out std_logic;
       OUTGOING_WORD_VALID : in  std_logic;
       OUTGOING_WORD       : in  std_logic_vector(PARALLEL_WIDTH-1 downto 0);
-      INCOMING_WORD_VALID : out std_logic := '0';
       INCOMING_WORD       : out std_logic_vector(PARALLEL_WIDTH-1 downto 0) := (others => '0')
     );
   end component;
@@ -67,6 +72,20 @@ begin
 		end if;
 	 end if;
   end process TOGGLE_MISO;
+  
+  STROBE_VALID :
+  process (CLOCK) is
+  begin
+    if (rising_edge(CLOCK)) then
+      if (RESET = '1') then 
+        WORD_SENDABLE <= '0';
+	   else
+	     WORD_SENDABLE <= READY_FOR_DATA;
+	   end if;
+	 end if;
+  end process STROBE_VALID;
+  OUTGOING_WORD_VALID <= WORD_SENDABLE and READY_FOR_DATA;
+  OUTGOING_WORD       <= X"A5";
   
   DUT :
   SPI_SERDES 
@@ -93,11 +112,10 @@ begin
       SERIAL_MOSI         => SERIAL_MOSI,
       SERIAL_MISO         => SERIAL_MISO,
 
-      READY_FOR_DATA      => open,
-      OUTGOING_WORD_VALID => '1',
-      OUTGOING_WORD       => X"A5",
-      INCOMING_WORD_VALID => open,
-      INCOMING_WORD       => open
+      READY_FOR_DATA      => READY_FOR_DATA,
+      OUTGOING_WORD_VALID => OUTGOING_WORD_VALID,
+      OUTGOING_WORD       => OUTGOING_WORD,
+      INCOMING_WORD       => INCOMING_WORD
     );
   
 end architecture SIMULATION;

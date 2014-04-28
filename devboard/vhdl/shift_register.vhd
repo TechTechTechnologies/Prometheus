@@ -31,7 +31,8 @@ begin
   
   GENERATE_BIDIRECTIONAL_SHIFT_REGISTER : 
   if (DIRECTIONALITY = 0) generate
-    BIDIRECTIONAL_SHIFT_REGISTER : process (CLOCK) is
+    BIDIRECTIONAL_SHIFT_REGISTER : 
+	 process (CLOCK) is
     begin
       if (rising_edge(CLOCK)) then
         if (RESET = '1') then
@@ -59,7 +60,8 @@ begin
   
   GENERATE_LEFT_SHIFT_REGISTER : 
   if (DIRECTIONALITY = -1) generate
-    LEFT_SHIFT_REGISTER : process (CLOCK) is
+    LEFT_SHIFT_REGISTER : 
+	 process (CLOCK) is
     begin
       if (rising_edge(CLOCK)) then
         if (RESET = '1') then
@@ -82,7 +84,8 @@ begin
   
   GENERATE_RIGHT_SHIFT_REGISTER : 
   if (DIRECTIONALITY = 1) generate
-    RIGHT_SHIFT_REGISTER : process (CLOCK) is
+    RIGHT_SHIFT_REGISTER : 
+	 process (CLOCK) is
     begin
       if (rising_edge(CLOCK)) then
         if (RESET = '1') then

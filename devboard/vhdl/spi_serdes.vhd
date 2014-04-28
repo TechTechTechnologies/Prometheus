@@ -32,7 +32,6 @@ entity SPI_SERDES is
     READY_FOR_DATA      : out std_logic;
     OUTGOING_WORD_VALID : in  std_logic;
     OUTGOING_WORD       : in  std_logic_vector(PARALLEL_WIDTH-1 downto 0);
-    INCOMING_WORD_VALID : out std_logic := '0';
     INCOMING_WORD       : out std_logic_vector(PARALLEL_WIDTH-1 downto 0) := (others => '0')
   );
 end entity;
@@ -40,8 +39,8 @@ end entity;
 architecture BEHAVIORAL of SPI_SERDES is
   constant OUTGOING_DIRECTIONALITY : integer := to_integer(unsigned'("" & LSB_FIRST))*2 - 1;
 
-  type   PARALLEL_INTERFACE_STATE_TYPE is (READY, XMIT);
-  signal PARALLEL_INTERFACE_STATE : PARALLEL_INTERFACE_STATE_TYPE := READY;
+  type   PARALLEL_INTERFACE_STATE_TYPE is (IDLE, BUSY, FULL);
+  signal PARALLEL_INTERFACE_STATE : PARALLEL_INTERFACE_STATE_TYPE := IDLE;
 
   type   SERIAL_INTERFACE_STATE_TYPE is (IDLE, CLK_LO, CLK_HI);
   signal SERIAL_INTERFACE_STATE : SERIAL_INTERFACE_STATE_TYPE := IDLE;
@@ -58,7 +57,9 @@ architecture BEHAVIORAL of SPI_SERDES is
   signal CLOCK_COUNTER : std_logic_vector(vector_length(CLOCK_DIVIDER)-1  downto 0) := (others => '0');
   signal BIT_COUNTER   : std_logic_vector(vector_length(PARALLEL_WIDTH)-1 downto 0) := (others => '0');
   
-  signal WORD_AVAILABLE : std_logic := '0';
+  signal WORD_PENDING   : std_logic := '0';
+  signal WORD_REGISTER  : std_logic_vector(PARALLEL_WIDTH-1 downto 0) := (others => '0');
+  signal SERIAL_BUSY    : std_logic := '0';
   
   component SHIFT_REGISTER is
     generic
@@ -83,30 +84,71 @@ architecture BEHAVIORAL of SPI_SERDES is
 begin
 
   READY_FOR_DATA      <= READY_FOR_DATA_I;
-  INCOMING_WORD_VALID <= INCOMING_WORD_VALID_I;
   INCOMING_WORD       <= INCOMING_WORD_I;
---  PARALLEL_INTERFACE : process (CLOCK) is
---  begin
---    if (rising_edge(CLOCK)) then
---      if (RESET = '1') then
---        INTERFACE_STATE     <= IDLE;
---
---      OUTGOING_WORD_VALID <= '0';
---        OUTGOING_WORD       <= (others => '0');
---      else
---        case (INTERFACE_STATE) is
---          when IDLE   =>
---          when READY  =>
---          when XMIT   =>
---          when others =>
---        end case;
---      end if;
---    end if;
---  end process PARALLEL_INTERFACE; 
-
-  READY_FOR_DATA_I      <= '1';
-  INCOMING_WORD_VALID_I <= '1';
-  WORD_AVAILABLE <= READY_FOR_DATA_I and OUTGOING_WORD_VALID;
+  
+  PARALLEL_INTERFACE : 
+  process (CLOCK) is
+  begin
+    if (rising_edge(CLOCK)) then
+      if (RESET = '1') then
+        PARALLEL_INTERFACE_STATE <= IDLE;
+      else
+        case (PARALLEL_INTERFACE_STATE) is
+          when IDLE  =>
+			   if (OUTGOING_WORD_VALID = '1') then
+				  PARALLEL_INTERFACE_STATE <= BUSY;
+				  WORD_REGISTER            <= OUTGOING_WORD;
+				else
+				  PARALLEL_INTERFACE_STATE <= IDLE;
+				end if;
+				
+          when BUSY  =>
+			   if (SERIAL_BUSY = '1') then
+			     if (OUTGOING_WORD_VALID =  '1') then
+                PARALLEL_INTERFACE_STATE <= FULL;
+					 WORD_REGISTER            <= OUTGOING_WORD;
+				  else 
+				    PARALLEL_INTERFACE_STATE <= BUSY;
+				  end if;
+				else
+				  PARALLEL_INTERFACE_STATE <= IDLE;
+				  if (OUTGOING_WORD_VALID =  '1') then
+                WORD_REGISTER <= OUTGOING_WORD;
+				  end if;
+				end if;
+				
+          when FULL  =>
+			   if (SERIAL_BUSY = '0') then
+				  PARALLEL_INTERFACE_STATE <= IDLE;
+				else
+				  PARALLEL_INTERFACE_STATE <= FULL;
+				end if;
+				
+        end case;
+      end if;
+    end if;
+  end process PARALLEL_INTERFACE; 
+  
+  PARALLEL_INTERFACE_COMBINATIONAL :
+  process (RESET, PARALLEL_INTERFACE_STATE) is
+  begin
+    if (RESET = '1') then
+	   READY_FOR_DATA_I <= '0';
+		WORD_PENDING     <= '0';
+	 else
+	   case (PARALLEL_INTERFACE_STATE) is
+		  when IDLE =>
+	       READY_FOR_DATA_I <= '1';
+			 WORD_PENDING     <= '0';
+		  when BUSY =>
+	       READY_FOR_DATA_I <= '1';
+			 WORD_PENDING     <= '1';
+		  when FULL =>
+	       READY_FOR_DATA_I <= '0';
+			 WORD_PENDING     <= '1';
+		end case;
+	 end if;
+  end process PARALLEL_INTERFACE_COMBINATIONAL;
   
   GENERATE_SPI_MASTER :
   if (MASTER) generate
@@ -124,7 +166,7 @@ begin
         else
           case (SERIAL_INTERFACE_STATE) is
             when IDLE =>
-              if (WORD_AVAILABLE = '1') then
+              if (WORD_PENDING = '1') then
                 SERIAL_INTERFACE_STATE <= CLK_LO;
 				  
   				    LOAD_SHIFT_REGS        <= '1';
@@ -164,26 +206,28 @@ begin
       end if;
     end process SERIAL_INTERFACE;
 	
+	 SERIAL_ENABLE <= ENABLE_POLARITY when (SERIAL_BUSY = '1') 
+	                                  else not(ENABLE_POLARITY);
     SERIAL_INTERFACE_COMBINATIONAL : 
     process (RESET, SERIAL_INTERFACE_STATE) is
     begin
 	   if (RESET = '1') then
 		  SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-		  SERIAL_ENABLE   <= not(ENABLE_POLARITY);
+		  SERIAL_BUSY     <= '0';
 		  STEP_SHIFT_REGS <= '0';
 		else
         case (SERIAL_INTERFACE_STATE) is
           when IDLE   =>
   		      SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-			   SERIAL_ENABLE   <= not(ENABLE_POLARITY);
+				SERIAL_BUSY     <= '0';
 			   STEP_SHIFT_REGS <= '0';
 		    when CLK_LO =>
             SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-			   SERIAL_ENABLE   <= ENABLE_POLARITY;
+				SERIAL_BUSY     <= '1';
   		      STEP_SHIFT_REGS <= '1';
 		    when CLK_HI =>
 		      SERIAL_CLOCK    <= CLOCK_POLARITY;
-			   SERIAL_ENABLE   <= ENABLE_POLARITY;
+			   SERIAL_BUSY     <= '1';
   		      STEP_SHIFT_REGS <= '0';
 	     end case;
 		end if;
@@ -213,7 +257,7 @@ begin
 		RESET     => RESET,
 		
 		LOAD      => LOAD_SHIFT_REGS,
-		BITS_IN   => OUTGOING_WORD,
+		BITS_IN   => WORD_REGISTER,
 		
 		STEP      => STEP_SHIFT_REGS,
 		DIRECTION => '0',
