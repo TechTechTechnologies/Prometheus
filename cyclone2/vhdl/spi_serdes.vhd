@@ -169,6 +169,7 @@ begin
           INCOMING_WORD_I <= (others => '0');
 
           CLEAR_SHIFT_REGS <= '0';
+          STEP_SHIFT_REGS <= '0';
         else
           case (SERIAL_INTERFACE_STATE) is
             when IDLE =>
@@ -178,13 +179,16 @@ begin
                 SERIAL_INTERFACE_STATE <= IDLE;
               end if;
               CLEAR_SHIFT_REGS <= '0';
+              STEP_SHIFT_REGS <= '0';
             when CLK_LO =>
               if (CLOCK_COUNTER = CLOCK_DIVIDER-1) then
                 SERIAL_INTERFACE_STATE <= CLK_HI;
                 CLOCK_COUNTER          <= (others => '0');
+                STEP_SHIFT_REGS <= '1';
               else
                 SERIAL_INTERFACE_STATE <= CLK_LO;
                 CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
+                STEP_SHIFT_REGS <= '0';
               end if;
               CLEAR_SHIFT_REGS <= '0';
             when CLK_HI =>
@@ -206,6 +210,7 @@ begin
                 CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
                 CLEAR_SHIFT_REGS <= '0';
               end if;
+              STEP_SHIFT_REGS <= '0';
           end case;
         end if;
       end if;
@@ -223,22 +228,18 @@ begin
       if (RESET = '1') then
         SERIAL_CLOCK    <= not(CLOCK_POLARITY);
         SERIAL_BUSY     <= '0';
-        STEP_SHIFT_REGS <= '0';
       else
         case (SERIAL_INTERFACE_STATE) is
           when IDLE   =>
             SERIAL_CLOCK    <= not(CLOCK_POLARITY);
             SERIAL_BUSY     <= '0';
-            STEP_SHIFT_REGS <= '0';
           when CLK_LO =>
             SERIAL_CLOCK    <= not(CLOCK_POLARITY);
 
             SERIAL_BUSY     <= '1';
-            STEP_SHIFT_REGS <= '1';
           when CLK_HI =>
             SERIAL_CLOCK    <= CLOCK_POLARITY;
             SERIAL_BUSY     <= '1';
-            STEP_SHIFT_REGS <= '0';
         end case;
       end if;
     end process SERIAL_INTERFACE_COMBINATIONAL;

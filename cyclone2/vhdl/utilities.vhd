@@ -5,10 +5,9 @@ package utilities is
   pure function vector_length
     (X : in natural)
     return natural;
-end;
+end package utilities;
 
 package body utilities is
-
   pure function vector_length
     (X : in natural)
     return natural
@@ -21,7 +20,6 @@ package body utilities is
       return natural(ceil(log2(real(x))));
     end if;
   end function vector_length;
-
 end package body;
 
 
