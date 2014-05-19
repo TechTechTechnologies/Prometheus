@@ -20,11 +20,11 @@ entity E_FEEDBACK_SHIFT_REGISTER is
     TAPS      : in  std_logic_vector(DEPTH-1 downto 0);
     
     BIT_IN	  : in std_logic;
-    BIT_OUT   : out std_logic;
+    BIT_OUT   : out std_logic
   );
-end entity FEEDBACK_SHIFT_REGISTER;
+end entity E_FEEDBACK_SHIFT_REGISTER;
 
-architecture BEHAVIORAL of FEEDBACK_SHIFT_REGISTER is
+architecture BEHAVIORAL of E_FEEDBACK_SHIFT_REGISTER is
   signal BITS_I : std_logic_vector(BITS'range) := SEED;
   signal NEXT_BIT : std_logic := '0';
   
