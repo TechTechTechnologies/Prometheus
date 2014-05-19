@@ -3,7 +3,11 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity prom1max is 
-
+  port
+  (
+    clk : in std_logic;
+    FSR_OUT : out std_logic_vector (2 downto 0)
+  );
 begin
 end;
 
@@ -11,8 +15,8 @@ architecture BEHAVIORAL of prom1max is
 
 	constant clkPeriod : time := 10ns;
 
-	signal clk : std_logic := '0';
-	signal rst : std_logic := '1';
+--  signal clk : std_logic := '0';
+	signal rst : std_logic := '0';
 	
 	signal F_OUT : std_logic_vector (2 downto 0); --feedback out from fsr
   signal F_IN : std_logic_vector (2 downto 0);  --feedback in to fsr
@@ -53,8 +57,10 @@ architecture BEHAVIORAL of prom1max is
 	
 begin
 
-	clk <= not clk after (clkPeriod/2);
-	rst <= '0' after (3*clkPeriod);
+--	clk <= not clk after (clkPeriod/2);
+--	rst <= '0' after (3*clkPeriod);
+
+  FSR_OUT <= F_OUT;
 	
 	FDBK : FEEDBACK_CONTROLLER
     port map
