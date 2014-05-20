@@ -75,12 +75,63 @@ architecture BEHAVIORAL of prom1max is
     );
   end component;
     
+  component BOOT_CONTROLLER is
+    generic
+    (
+      CLKDIV0 : std_logic_vector (15 downto 0) := X"0BAA"; --5972/2
+      CLKDIV1 : std_logic_vector (15 downto 0) := X"1754";  --5972 C's
+      CLKDIV2 : std_logic_vector (15 downto 0) := X"2EA9"; --11945
+      CLKOFF0 : std_logic_vector (15 downto 0) := X"0000";
+      CLKOFF1 : std_logic_vector (15 downto 0) := X"0000";
+      CLKOFF2 : std_logic_vector (15 downto 0) := X"0000"
+    );
+    port
+    (
+      CLOCK : in std_logic;
+      RESET : in std_logic;
+      
+      CCTRL_RESET  : out std_logic;
+      CCTRL_SET    : out std_logic;
+      CCTRL_SELECT : out std_logic_vector (2 downto 0);
+      CCTRL_DATA   : out std_logic_vector (15 downto 0);
+
+      L0_RESET     : out std_logic;
+      L1_RESET     : out std_logic;
+      L2_RESET     : out std_logic
+    );
+  end component;
+
+  signal CCTRL_RESET  : std_logic;
+  signal CCTRL_SET    : std_logic;
+  signal CCTRL_SELECT : std_logic_vector (2 downto 0);
+  signal CCTRL_DATA   : std_logic_vector (15 downto 0);
+
+  signal L0_RESET     : std_logic;
+  signal L1_RESET     : std_logic;
+  signal L2_RESET     : std_logic;
+    
 begin
 
 --	clk <= not clk after (clkPeriod/2);
 --	rst <= '0' after (3*clkPeriod);
 
   FSR_OUT <= F_OUT;
+	
+	BOOT : BOOT_CONTROLLER
+    port map
+    (
+      CLOCK => clk,
+      RESET => '0',
+    
+      CCTRL_RESET => CCTRL_RESET,
+      CCTRL_SET => CCTRL_SET,
+      CCTRL_SELECT => CCTRL_SELECT,
+      CCTRL_DATA => CCTRL_DATA,
+
+      L0_RESET => L0_RESET,
+      L1_RESET => L1_RESET,
+      L2_RESET => L2_RESET
+    );
 	
 	FDBK : FEEDBACK_CONTROLLER
     port map
@@ -94,11 +145,11 @@ begin
     port map
     (
       CLOCK => clk,
-      SET => '0',
-      RESET => '0',
+      SET => CCTRL_SET,
+      RESET => CCTRL_RESET,
       
-      REG_SELECT => "000",
-      DATA => X"0000",
+      REG_SELECT => CCTRL_SELECT,
+      DATA => CCTRL_DATA,
       
       OUT0 => CLK0,
       OUT1 => CLK1,
@@ -113,7 +164,7 @@ begin
 		port map
 		(
 			CLOCK	=> CLK0,
-			RESET	=>rst,
+			RESET	=>L0_RESET,
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
@@ -131,7 +182,7 @@ begin
 		port map
 		(
 			CLOCK	=> CLK1,
-			RESET	=>rst,
+			RESET	=>L1_RESET,
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
@@ -149,7 +200,7 @@ begin
 		port map
 		(
 			CLOCK	=> CLK2,
-			RESET	=>rst,
+			RESET	=>L2_RESET,
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
