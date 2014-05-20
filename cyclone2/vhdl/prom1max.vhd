@@ -18,6 +18,10 @@ architecture BEHAVIORAL of prom1max is
 --  signal clk : std_logic := '0';
 	signal rst : std_logic := '0';
 	
+	signal CLK0 : std_logic;
+	signal CLK1 : std_logic;
+	signal CLK2 : std_logic;
+	
 	signal F_OUT : std_logic_vector (2 downto 0); --feedback out from fsr
   signal F_IN : std_logic_vector (2 downto 0);  --feedback in to fsr
 
@@ -54,7 +58,23 @@ architecture BEHAVIORAL of prom1max is
     BITS_OUT : out std_logic_vector ( DEPTH-1 downto 0)
   );
   end component;
-	
+
+  component CLOCK_CONTROLLER is
+    port
+    (
+      CLOCK : in std_logic;
+      RESET : in std_logic;
+      SET   : in std_logic;
+      
+      REG_SELECT : in std_logic_vector (2 downto 0);
+      DATA       : in std_logic_vector (15 downto 0);
+      
+      OUT0 : out std_logic;
+      OUT1 : out std_logic;
+      OUT2 : out std_logic
+    );
+  end component;
+    
 begin
 
 --	clk <= not clk after (clkPeriod/2);
@@ -69,6 +89,21 @@ begin
       BITS_IN  => F_OUT,
       BITS_OUT => F_IN
     );
+
+  CLOCK_CTRL : CLOCK_CONTROLLER
+    port map
+    (
+      CLOCK => clk,
+      SET => '0',
+      RESET => '0',
+      
+      REG_SELECT => "000",
+      DATA => X"0000",
+      
+      OUT0 => CLK0,
+      OUT1 => CLK1,
+      OUT2 => CLK2
+    );
 	
 	LFSR0 : E_FEEDBACK_SHIFT_REGISTER
 		generic map
@@ -77,7 +112,7 @@ begin
 		)
 		port map
 		(
-			CLOCK	=> clk,
+			CLOCK	=> CLK0,
 			RESET	=>rst,
 			
 			ENABLE 		=> '1',
@@ -95,7 +130,7 @@ begin
 		)
 		port map
 		(
-			CLOCK	=> clk,
+			CLOCK	=> CLK1,
 			RESET	=>rst,
 			
 			ENABLE 		=> '1',
@@ -113,7 +148,7 @@ begin
 		)
 		port map
 		(
-			CLOCK	=> clk,
+			CLOCK	=> CLK2,
 			RESET	=>rst,
 			
 			ENABLE 		=> '1',

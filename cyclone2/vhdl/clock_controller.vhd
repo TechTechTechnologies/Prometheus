@@ -1,6 +1,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.std_logic_unsigned.all;
 
 entity CLOCK_CONTROLLER is
   port
@@ -12,15 +13,13 @@ entity CLOCK_CONTROLLER is
     REG_SELECT : in std_logic_vector (2 downto 0);
     DATA       : in std_logic_vector (15 downto 0);
     
-    CLK0 : out std_logic;
-    CLK1 : out std_logic;
-    CLK2 : out std_logic
+    OUT0 : out std_logic;
+    OUT1 : out std_logic;
+    OUT2 : out std_logic
   );
 end entity CLOCK_CONTROLLER;
 
 architecture BEHAVIORAL of CLOCK_CONTROLLER is
-  
-  type SEL is (Div0, Div1, Div2, Off0, Off1, Off2);
   
   signal COUNTER0 : std_logic_vector (15 downto 0) := X"0000";
   signal COUNTER1 : std_logic_vector (15 downto 0) := X"0000";
@@ -29,10 +28,14 @@ architecture BEHAVIORAL of CLOCK_CONTROLLER is
   signal EQ0 : boolean := FALSE;
   signal EQ1 : boolean := FALSE;
   signal EQ2 : boolean := FALSE;  
+
+  signal CLK0 : std_logic;
+  signal CLK1 : std_logic;
+  signal CLK2 : std_logic;
   
-  signal DIVIDER0 : std_logic_vector (15 downto 0) := X"0001";
-  signal DIVIDER1 : std_logic_vector (15 downto 0) := X"0001";
-  signal DIVIDER2 : std_logic_vector (15 downto 0) := X"0001";  
+  signal DIVIDER0 : std_logic_vector (15 downto 0) := X"8000";
+  signal DIVIDER1 : std_logic_vector (15 downto 0) := X"8000";
+  signal DIVIDER2 : std_logic_vector (15 downto 0) := X"8000";  
 
   signal OFFSET0 : std_logic_vector (15 downto 0) := X"0000";
   signal OFFSET1 : std_logic_vector (15 downto 0) := X"0000";
@@ -43,13 +46,17 @@ architecture BEHAVIORAL of CLOCK_CONTROLLER is
   signal RATIO2 : std_logic_vector (15 downto 0);
 begin
 
-  RATIO0 <= std_logic_vector(signed(DIVIDER0) + signed(OFFSET0));
-  RATIO1 <= std_logic_vector(signed(DIVIDER1) + signed(OFFSET1));
-  RATIO2 <= std_logic_vector(signed(DIVIDER2) + signed(OFFSET2));
+  RATIO0 <= DIVIDER0 + OFFSET0;
+  RATIO1 <= DIVIDER1 + OFFSET1;
+  RATIO2 <= DIVIDER2 + OFFSET2;
 
-  EQ0 <= (unsigned(COUNTER0) = unsigned(RATIO0));
-  EQ1 <= (unsigned(COUNTER1) = unsigned(RATIO1));
-  EQ2 <= (unsigned(COUNTER2) = unsigned(RATIO2));
+  EQ0 <= COUNTER0 = RATIO0;
+  EQ1 <= COUNTER1 = RATIO1;
+  EQ2 <= COUNTER2 = RATIO2;
+
+  OUT0 <= CLK0;
+  OUT1 <= CLK1;
+  OUT2 <= CLK2;
 
   process (CLOCK) is
   begin
@@ -63,23 +70,27 @@ begin
         CLK2 <= '0';
       elsif(SET = '1') then
         case REG_SELECT is
-        when Div0 =>
+        when "000" =>
           DIVIDER0 <= DATA;
           COUNTER0 <= X"0000";
-        when Div1 =>
+        when "010" =>
           DIVIDER1 <= DATA;
           COUNTER1 <= X"0000";
-        when Div2 =>
+        when "100" =>
           DIVIDER2 <= DATA;
           COUNTER2 <= X"0000";
-        when Off0 =>
+        when "001" =>
           OFFSET0  <= DATA;
           COUNTER0 <= X"0000";
-        when Off1 =>
+        when "011" =>
           OFFSET1  <= DATA;
           COUNTER1 <= X"0000";
-        when Off2 =>
+        when "101" =>
           OFFSET2  <= DATA;
+          COUNTER2 <= X"0000";
+        when others => 
+          COUNTER0 <= X"0000";
+          COUNTER1 <= X"0000";
           COUNTER2 <= X"0000";
         end case;
       else
@@ -87,21 +98,21 @@ begin
           COUNTER0 <= X"0000";
           CLK0 <= not CLK0;
         else
-          COUNTER0 <= COUNTER0+ X"0001";
+          COUNTER0 <= COUNTER0 + X"0001";
         end if;
 
         if(EQ1) then
           COUNTER1 <= X"0000";
           CLK1 <= not CLK1;
         else
-          COUNTER1 <= COUNTER1+ X"0001";
+          COUNTER1 <= COUNTER1 + X"0001";
         end if;
 
         if(EQ2) then
           COUNTER2 <= X"0000";
           CLK2 <= not CLK2;
         else
-          COUNTER2 <= COUNTER2+ X"0001";
+          COUNTER2 <= COUNTER2 + X"0001";
         end if;
 
       end if;
