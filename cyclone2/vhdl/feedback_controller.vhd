@@ -22,6 +22,6 @@ end entity FEEDBACK_CONTROLLER;
 architecture BEHAVIORAL of FEEDBACK_CONTROLLER is
 begin
 
-  BITS_OUT <= std_logic_vector(unsigned(BITS_IN) rol 0); --nonzero modes pass feedback from LFSRx to LFSR(x+MODE)
+  BITS_OUT <= not std_logic_vector(unsigned(BITS_IN) rol 0); --nonzero modes pass feedback from LFSRx to LFSR(x+MODE)
 
 end architecture BEHAVIORAL;

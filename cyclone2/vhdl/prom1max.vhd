@@ -6,7 +6,9 @@ entity prom1max is
   port
   (
     clk : in std_logic;
-    FSR_OUT : out std_logic_vector (2 downto 0)
+    FSR_OUT : out std_logic_vector (2 downto 0);
+    
+    RST_OUT : out std_logic
   );
 begin
 end;
@@ -82,8 +84,8 @@ architecture BEHAVIORAL of prom1max is
       CLKDIV1 : std_logic_vector (15 downto 0) := X"1754";  --5972 C's
       CLKDIV2 : std_logic_vector (15 downto 0) := X"2EA9"; --11945
       CLKOFF0 : std_logic_vector (15 downto 0) := X"0000";
-      CLKOFF1 : std_logic_vector (15 downto 0) := X"0000";
-      CLKOFF2 : std_logic_vector (15 downto 0) := X"0000"
+      CLKOFF1 : std_logic_vector (15 downto 0) := X"0008";
+      CLKOFF2 : std_logic_vector (15 downto 0) := X"0010"
     );
     port
     (
@@ -116,6 +118,8 @@ begin
 --	rst <= '0' after (3*clkPeriod);
 
   FSR_OUT <= F_OUT;
+	
+	RST_OUT <= L0_RESET;
 	
 	BOOT : BOOT_CONTROLLER
     port map
@@ -159,7 +163,7 @@ begin
 	LFSR0 : E_FEEDBACK_SHIFT_REGISTER
 		generic map
 		(
-			SEED	=> X"FFF"
+			SEED	=> X"000"
 		)
 		port map
 		(
@@ -169,7 +173,7 @@ begin
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
 			--BITS      => BITS,
-			TAPS      => X"0D8",
+			TAPS      => X"080",
 			BIT_IN    => F_IN(0),
 			BIT_OUT   => F_OUT(0)
 		);
@@ -177,7 +181,7 @@ begin
 	LFSR1 : E_FEEDBACK_SHIFT_REGISTER
 		generic map
 		(
-			SEED	=> X"FFF"
+			SEED	=> X"000"
 		)
 		port map
 		(
@@ -187,7 +191,7 @@ begin
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
 			--BITS      => BITS,
-			TAPS      => X"0D8",
+			TAPS      => X"080",
 			BIT_IN    => F_IN(1),
 			BIT_OUT   => F_OUT(1)
 		);
@@ -195,7 +199,7 @@ begin
 	LFSR2 : E_FEEDBACK_SHIFT_REGISTER
 		generic map
 		(
-			SEED	=> X"FFF"
+			SEED	=> X"000"
 		)
 		port map
 		(
@@ -205,7 +209,7 @@ begin
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
 			--BITS      => BITS,
-			TAPS      => X"0D8",
+			TAPS      => X"080",
 			BIT_IN    => F_IN(2),
 			BIT_OUT   => F_OUT(2)
 		);
