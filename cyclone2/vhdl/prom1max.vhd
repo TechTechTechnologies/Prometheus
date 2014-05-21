@@ -5,7 +5,8 @@ use IEEE.numeric_std.all;
 entity prom1max is 
   port
   (
-    clk : in std_logic;
+    CLOCK : in std_logic;
+    RESET : in std_logic := '0';
     FSR_OUT : out std_logic_vector (2 downto 0);
     
     RST_OUT : out std_logic
@@ -15,9 +16,6 @@ end;
 
 architecture BEHAVIORAL of prom1max is
 
-	constant clkPeriod : time := 10ns;
-
---  signal clk : std_logic := '0';
 	signal rst : std_logic := '0';
 	
 	signal CLK0 : std_logic;
@@ -114,9 +112,6 @@ architecture BEHAVIORAL of prom1max is
     
 begin
 
---	clk <= not clk after (clkPeriod/2);
---	rst <= '0' after (3*clkPeriod);
-
   FSR_OUT <= F_OUT;
 	
 	RST_OUT <= L0_RESET;
@@ -124,8 +119,8 @@ begin
 	BOOT : BOOT_CONTROLLER
     port map
     (
-      CLOCK => clk,
-      RESET => '0',
+      CLOCK => CLOCK,
+      RESET =>RESET,
     
       CCTRL_RESET => CCTRL_RESET,
       CCTRL_SET => CCTRL_SET,
@@ -148,7 +143,7 @@ begin
   CLOCK_CTRL : CLOCK_CONTROLLER
     port map
     (
-      CLOCK => clk,
+      CLOCK => CLOCK,
       SET => CCTRL_SET,
       RESET => CCTRL_RESET,
       
@@ -172,7 +167,6 @@ begin
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
-			--BITS      => BITS,
 			TAPS      => X"080",
 			BIT_IN    => F_IN(0),
 			BIT_OUT   => F_OUT(0)
@@ -190,7 +184,6 @@ begin
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
-			--BITS      => BITS,
 			TAPS      => X"080",
 			BIT_IN    => F_IN(1),
 			BIT_OUT   => F_OUT(1)
@@ -208,7 +201,6 @@ begin
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
-			--BITS      => BITS,
 			TAPS      => X"080",
 			BIT_IN    => F_IN(2),
 			BIT_OUT   => F_OUT(2)
