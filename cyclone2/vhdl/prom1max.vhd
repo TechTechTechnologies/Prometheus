@@ -6,7 +6,7 @@ entity prom1max is
   port
   (
     CLOCK : in std_logic;
-    RESET : in std_logic := '0';
+    RESET_IN : in std_logic := '0';
     FSR_OUT : out std_logic_vector (2 downto 0);
     
     RST_OUT : out std_logic
@@ -16,6 +16,7 @@ end;
 
 architecture BEHAVIORAL of prom1max is
 
+  signal RESET : std_logic;
 	signal rst : std_logic := '0';
 	
 	signal CLK0 : std_logic;
@@ -111,6 +112,8 @@ architecture BEHAVIORAL of prom1max is
   signal L2_RESET     : std_logic;
     
 begin
+
+  RESET <= not RESET_IN;
 
   FSR_OUT <= F_OUT;
 	
