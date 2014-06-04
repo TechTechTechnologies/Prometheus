@@ -2,6 +2,8 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+use work.key_config.all;
+
 entity prom1max is 
   port
   (
@@ -9,7 +11,14 @@ entity prom1max is
     RESET_IN : in std_logic := '0';
     FSR_OUT : out std_logic_vector (2 downto 0);
     
-    RST_OUT : out std_logic
+    RST_OUT : out std_logic;
+	 
+    BUTTON : in std_logic_vector (3 downto 0);
+    LED : out std_logic_vector (7 downto 0);
+   
+	 PS2_CLK  : in std_logic;
+	 PS2_DATA : inout std_logic
+	 --D18 data
   );
 begin
 end;
@@ -102,6 +111,29 @@ architecture BEHAVIORAL of prom1max is
     );
   end component;
 
+  component PS2_KEYBOARD is
+    generic
+    (
+      --                      Z      X      C      A      S      D      Q      W      E      1      2      3        
+      taps_k0 : tap_keys := (X"1A", X"22", X"21", X"1C", X"1B", X"23", X"15", X"1d", X"24", X"16", X"1E", X"26");
+      --                      V      B      N      F      G      H      R      T      Y      4      5      6       
+      taps_k1 : tap_keys := (X"2A", X"32", X"31", X"2B", X"34", X"33", X"2D", X"2C", X"35", X"25", X"2E", X"36");
+      --                      M      ,      .      J      K      L      U      I      O      7      8      9
+      taps_k2 : tap_keys := (X"3A", X"41", X"49", X"3B", X"42", X"4B", X"3C", X"43", X"44", X"3D", X"3E", X"46")
+    );
+    port
+    (
+      PS2_DATA  : inout std_logic;
+      PS2_CLOCK : in std_logic;
+
+      KEYOUT : out std_logic_vector (15 downto 0);
+      
+      TAPS0     : out std_logic_vector (11 downto 0);
+      TAPS1     : out std_logic_vector (11 downto 0);
+      TAPS2     : out std_logic_vector (11 downto 0)
+    );
+  end component;
+  
   signal CCTRL_RESET  : std_logic;
   signal CCTRL_SET    : std_logic;
   signal CCTRL_SELECT : std_logic_vector (2 downto 0);
@@ -111,6 +143,11 @@ architecture BEHAVIORAL of prom1max is
   signal L1_RESET     : std_logic;
   signal L2_RESET     : std_logic;
     
+  signal TAPS0 : std_logic_vector(11 downto 0);
+  signal TAPS1 : std_logic_vector(11 downto 0);
+  signal TAPS2 : std_logic_vector(11 downto 0);
+  
+  signal KEYOUT : std_logic_vector(15 downto 0);
 begin
 
   RESET <= not RESET_IN;
@@ -119,6 +156,19 @@ begin
 	
 	RST_OUT <= L0_RESET;
 	
+  LED <= KEYOUT (7 downto 0) when (BUTTON(0) = '0') else KEYOUT(15 downto 8);
+  
+  KEYBOARD : PS2_KEYBOARD 
+    port map
+    (
+      KEYOUT => KEYOUT,
+      PS2_DATA => PS2_DATA,
+      PS2_CLOCK => PS2_CLK,
+      TAPS0 => TAPS0,
+      TAPS1 => TAPS1,
+      TAPS2 => TAPS2
+    );
+  
 	BOOT : BOOT_CONTROLLER
     port map
     (
@@ -170,7 +220,8 @@ begin
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
-			TAPS      => X"080",
+--			TAPS      => X"080",
+			TAPS      => TAPS0,
 			BIT_IN    => F_IN(0),
 			BIT_OUT   => F_OUT(0)
 		);
@@ -187,7 +238,7 @@ begin
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
-			TAPS      => X"080",
+			TAPS      => TAPS1,
 			BIT_IN    => F_IN(1),
 			BIT_OUT   => F_OUT(1)
 		);
@@ -204,7 +255,7 @@ begin
 			
 			ENABLE 		=> '1',
 			DIRECTION =>'1',
-			TAPS      => X"080",
+			TAPS      => TAPS2,
 			BIT_IN    => F_IN(2),
 			BIT_OUT   => F_OUT(2)
 		);
