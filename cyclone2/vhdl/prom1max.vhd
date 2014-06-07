@@ -115,18 +115,21 @@ architecture BEHAVIORAL of prom1max is
     generic
     (
       --                      Z      X      C      A      S      D      Q      W      E      1      2      3        
-      taps_k0 : tap_keys := (X"1A", X"22", X"21", X"1C", X"1B", X"23", X"15", X"1d", X"24", X"16", X"1E", X"26");
+      taps_k2 : tap_keys := (X"1A", X"22", X"21", X"1C", X"1B", X"23", X"15", X"1d", X"24", X"16", X"1E", X"26");
       --                      V      B      N      F      G      H      R      T      Y      4      5      6       
       taps_k1 : tap_keys := (X"2A", X"32", X"31", X"2B", X"34", X"33", X"2D", X"2C", X"35", X"25", X"2E", X"36");
       --                      M      ,      .      J      K      L      U      I      O      7      8      9
-      taps_k2 : tap_keys := (X"3A", X"41", X"49", X"3B", X"42", X"4B", X"3C", X"43", X"44", X"3D", X"3E", X"46")
+      taps_k0 : tap_keys := (X"3A", X"41", X"49", X"3B", X"42", X"4B", X"3C", X"43", X"44", X"3D", X"3E", X"46")
     );
     port
     (
+      CLOCK     : in std_logic;
+      RESET               : in std_logic;
+      
       PS2_DATA  : inout std_logic;
       PS2_CLOCK : in std_logic;
 
-      KEYOUT : out std_logic_vector (15 downto 0);
+      KEYOUT : out std_logic_vector (7 downto 0);
       
       TAPS0     : out std_logic_vector (11 downto 0);
       TAPS1     : out std_logic_vector (11 downto 0);
@@ -147,7 +150,7 @@ architecture BEHAVIORAL of prom1max is
   signal TAPS1 : std_logic_vector(11 downto 0);
   signal TAPS2 : std_logic_vector(11 downto 0);
   
-  signal KEYOUT : std_logic_vector(15 downto 0);
+  signal KEYOUT : std_logic_vector(7 downto 0);
 begin
 
   RESET <= not RESET_IN;
@@ -156,11 +159,13 @@ begin
 	
 	RST_OUT <= L0_RESET;
 	
-  LED <= KEYOUT (7 downto 0) when (BUTTON(0) = '0') else KEYOUT(15 downto 8);
+  LED <= KEYOUT (7 downto 0);
   
   KEYBOARD : PS2_KEYBOARD 
     port map
     (
+      CLOCK => CLOCK,
+      RESET => not BUTTON(0),
       KEYOUT => KEYOUT,
       PS2_DATA => PS2_DATA,
       PS2_CLOCK => PS2_CLK,

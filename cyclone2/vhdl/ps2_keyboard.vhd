@@ -20,7 +20,7 @@ entity PS2_KEYBOARD is
     PS2_DATA  : inout std_logic;
     PS2_CLOCK : inout std_logic;
     
-    KEYOUT : out std_logic_vector (15 downto 0);
+    KEYOUT : out std_logic_vector (7 downto 0);
     
     TAPS0     : out std_logic_vector (11 downto 0);
     TAPS1     : out std_logic_vector (11 downto 0);
@@ -29,45 +29,59 @@ entity PS2_KEYBOARD is
 end entity PS2_KEYBOARD;
 
 architecture BEHAVIORAL of PS2_KEYBOARD is
-  signal COUNTER  : std_logic_vector (4 downto 0) := "00000";
+  signal COUNTER  : std_logic_vector (3 downto 0) := X"0";
   
-  signal DATA     : std_logic_vector (21 downto 0); --19 downto 12 and 8 downto 1
+  signal DATA     : std_logic_vector (10 downto 0); --8 downto 1
+  
+  signal KEY      : std_logic_vector (7 downto 0);
+  signal PARITY   : std_logic;
   
   signal KTYPE    : std_logic;  
+  signal EXT      : std_logic;
 begin
 
-
+  KEY <= DATA(9 downto 2);
+  PARITY <= DATA(1);
+  
   process(PS2_CLOCK)is
   begin
-    if(falling_edge(PS2_CLOCK)) then
+    if(rising_edge(PS2_CLOCK)) then
       PS2_DATA <= 'Z';
-      DATA <= PS2_DATA & DATA(21 downto 1);
+      DATA <= PS2_DATA & DATA(10 downto 1);
       
-      if(DATA(19 downto 12) = X"F0") then
-        KTYPE <= '0';
+      if(COUNTER = X"A") then
+        COUNTER <= X"0";
+        
+        --KEYOUT <= KEY;
+        if(not xor_reduce(KEY) = PARITY) then
+          KEYOUT <= X"FF";
+        else
+          KEYOUT <= X"00";
+        end if;
+          
+        
+        if (KEY = X"F0") then
+          KTYPE <= '1';
+        elsif (KEY = X"E0") then
+          EXT <= '1';
+        else
+          for I in 0 to 11 loop
+            if(KEY = taps_k0(I)) then
+              TAPS0(I) <= not KTYPE;
+            end if;
+            if(KEY = taps_k1(I)) then
+              TAPS1(I) <= not KTYPE;
+            end if;
+            if(KEY = taps_k2(I)) then
+              TAPS2(I) <= not KTYPE;
+            end if;
+          end loop;
+          KTYPE <= '0';
+          EXT <= '0';
+        end if;
+        
       else
-        KTYPE <= '1';
-      end if;
-
-      if(COUNTER = "10101") then
-        COUNTER <= "00000";
-        
-        KEYOUT <= DATA(19 downto 12) & DATA(8 downto 1);
-        
-        for I in 0 to 11 loop
-          if(DATA(8 downto 1) = taps_k0(I)) then
-            TAPS0(I) <= KTYPE;
-          end if;
-          if(DATA(8 downto 1) = taps_k1(I)) then
-            TAPS1(I) <= KTYPE;
-          end if;
-          if(DATA(8 downto 1) = taps_k2(I)) then
-            TAPS2(I) <= KTYPE;
-          end if;
-        end loop;
-        
-      else
-        COUNTER <= COUNTER + "00001";
+        COUNTER <= COUNTER + X"1";
       end if;
     
     end if;
