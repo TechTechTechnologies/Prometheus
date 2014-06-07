@@ -1,0 +1,41 @@
+# Copyright (C) 1991-2013 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+
+# Quartus II 64-Bit Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
+# File: C:\Users\Gravyman3321\Documents\ttt\Prometheus\Prometheus\cyclone2\vhdl\prom1maxpins.csv
+# Generated on: Sat Jun 07 10:46:39 2014
+
+# Note: The column header names should not be changed if you wish to import this .csv file into the Quartus II software.
+
+To,Direction,Location,I/O Bank,Fitter Location,I/O Standard,Reserved,Current Strength,PCI I/O
+BUTTON[3],Input,PIN_V14,4,PIN_V14,,,,
+BUTTON[2],Input,PIN_U14,4,PIN_U14,,,,
+BUTTON[1],Input,PIN_V15,4,PIN_V15,,,,
+BUTTON[0],Input,PIN_U15,4,PIN_U15,,,,
+CLOCK,Input,PIN_J6,1,PIN_J6,,,,
+FSR_OUT[2],Output,PIN_C11,2,PIN_C11,,,,
+FSR_OUT[1],Output,PIN_D11,2,PIN_D11,,,,
+FSR_OUT[0],Output,PIN_C12,2,PIN_C12,,,,
+LED[7],Output,PIN_U4,4,PIN_U4,,,,
+LED[6],Output,PIN_V4,4,PIN_V4,,,,
+LED[5],Output,PIN_U5,4,PIN_U5,,,,
+LED[4],Output,PIN_V5,4,PIN_V5,,,,
+LED[3],Output,PIN_V12,4,PIN_V12,,,,
+LED[2],Output,PIN_U12,4,PIN_U12,,,,
+LED[1],Output,PIN_V13,4,PIN_V13,,,,
+LED[0],Output,PIN_U13,4,PIN_U13,,,,
+PS2_CLK,Input,PIN_D17,3,PIN_D17,,,,On
+PS2_DATA,Bidir,PIN_D18,3,PIN_D18,,,,On
+RESET_IN,Input,,,PIN_U7,,,,
+RST_OUT,Output,,,PIN_B10,,,,
