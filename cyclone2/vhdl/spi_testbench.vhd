@@ -29,7 +29,7 @@ architecture SIMULATION of SPI_TESTBENCH is
   signal OUTGOING_WORD       : std_logic_vector(7 downto 0) := (others => '0');
   signal INCOMING_WORD       : std_logic_vector(7 downto 0) := (others => '0');
   
-  component SPI_SERDES is
+  component BIDIR_SERDES is
     generic
     (
       SERIAL_WIDTH    : natural range 1 to 32 := 8;
@@ -145,7 +145,7 @@ begin
   end generate GENERATE_SLAVE_SIGNALS;
 
   DUT :
-  SPI_SERDES 
+  BIDIR_SERDES 
     generic map
     (
       SERIAL_WIDTH    => 8,

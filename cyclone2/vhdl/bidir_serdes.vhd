@@ -5,7 +5,7 @@ use IEEE.std_logic_unsigned.all;
 
 use work.utilities.all;
 
-entity SPI_SERDES is
+entity BIDIR_SERDES is
   generic
   (
     SERIAL_WIDTH    : natural range 1 to 32 := 8;
@@ -36,7 +36,7 @@ entity SPI_SERDES is
   );
 end entity;
 
-architecture BEHAVIORAL of SPI_SERDES is
+architecture BEHAVIORAL of BIDIR_SERDES is
   constant OUTGOING_DIRECTIONALITY : integer := to_integer(unsigned'("" & LSB_FIRST))*2 - 1;
 
   type   PARALLEL_INTERFACE_STATE_TYPE is (IDLE, BUSY, FULL);
@@ -50,7 +50,6 @@ architecture BEHAVIORAL of SPI_SERDES is
   signal INCOMING_WORD_I       : std_logic_vector(INCOMING_WORD'range) := (others => '0');
   
   signal LOAD_SHIFT_REGS  : std_logic := '0';
-  signal CLEAR_SHIFT_REGS : std_logic := '0';
   signal STEP_SHIFT_REGS  : std_logic := '0'; 
   signal TX_BITS : std_logic_vector(PARALLEL_WIDTH-1 downto 0) := (others => '0');
   signal RX_BITS : std_logic_vector(PARALLEL_WIDTH-1 downto 0) := (others => '0');
@@ -168,7 +167,6 @@ begin
 
           INCOMING_WORD_I <= (others => '0');
 
-          CLEAR_SHIFT_REGS <= '0';
           STEP_SHIFT_REGS <= '0';
         else
           case (SERIAL_INTERFACE_STATE) is
@@ -178,7 +176,6 @@ begin
               else
                 SERIAL_INTERFACE_STATE <= IDLE;
               end if;
-              CLEAR_SHIFT_REGS <= '0';
               STEP_SHIFT_REGS <= '0';
             when CLK_LO =>
               if (CLOCK_COUNTER = CLOCK_DIVIDER-1) then
@@ -188,9 +185,7 @@ begin
               else
                 SERIAL_INTERFACE_STATE <= CLK_LO;
                 CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
-                STEP_SHIFT_REGS <= '0';
               end if;
-              CLEAR_SHIFT_REGS <= '0';
             when CLK_HI =>
               if (CLOCK_COUNTER = CLOCK_DIVIDER-1) then
                 if (BIT_COUNTER = PARALLEL_WIDTH-1) then
@@ -198,17 +193,14 @@ begin
                   BIT_COUNTER <= (others => '0');
 
                   INCOMING_WORD_I <= RX_BITS;
-                  CLEAR_SHIFT_REGS <= '1';
                 else
                   SERIAL_INTERFACE_STATE <= CLK_LO;
                   BIT_COUNTER <= BIT_COUNTER + 1;
-                  CLEAR_SHIFT_REGS <= '0';
                 end if;
                 CLOCK_COUNTER          <= (others => '0');
               else
                 SERIAL_INTERFACE_STATE <= CLK_HI;
                 CLOCK_COUNTER          <= CLOCK_COUNTER + 1;
-                CLEAR_SHIFT_REGS <= '0';
               end if;
               STEP_SHIFT_REGS <= '0';
           end case;
@@ -231,15 +223,15 @@ begin
       else
         case (SERIAL_INTERFACE_STATE) is
           when IDLE   =>
-            SERIAL_CLOCK    <= not(CLOCK_POLARITY);
-            SERIAL_BUSY     <= '0';
+            SERIAL_CLOCK <= not(CLOCK_POLARITY);
+            SERIAL_BUSY  <= '0';
           when CLK_LO =>
-            SERIAL_CLOCK    <= not(CLOCK_POLARITY);
+            SERIAL_CLOCK <= not(CLOCK_POLARITY);
 
-            SERIAL_BUSY     <= '1';
+            SERIAL_BUSY  <= '1';
           when CLK_HI =>
-            SERIAL_CLOCK    <= CLOCK_POLARITY;
-            SERIAL_BUSY     <= '1';
+            SERIAL_CLOCK <= CLOCK_POLARITY;
+            SERIAL_BUSY  <= '1';
         end case;
       end if;
     end process SERIAL_INTERFACE_COMBINATIONAL;
@@ -256,8 +248,7 @@ begin
            CLOCK_COUNTER <= (others => '0');
            BIT_COUNTER   <= (others => '0');
 
-           INCOMING_WORD_I <= (others => '0');
-           CLEAR_SHIFT_REGS <= '1';
+           INCOMING_WORD_I  <= (others => '0');
         else
           case (SERIAL_INTERFACE_STATE) is
             when IDLE =>
@@ -266,34 +257,29 @@ begin
               else
                 SERIAL_INTERFACE_STATE <= IDLE;
               end if;
-              CLEAR_SHIFT_REGS <= '0';
 
            when CLK_LO =>
              if (SERIAL_ENABLE = not(ENABLE_POLARITY)) then
                SERIAL_INTERFACE_STATE <= IDLE;
                INCOMING_WORD_I        <= RX_BITS;
-               CLEAR_SHIFT_REGS       <= '1';
              else
                if (SERIAL_CLOCK = CLOCK_POLARITY) then
                  SERIAL_INTERFACE_STATE <= CLK_HI;
                else
                  SERIAL_INTERFACE_STATE <= CLK_LO;
                end if;
-               CLEAR_SHIFT_REGS <= '0';
              end if;
 
            when CLK_HI =>
              if (SERIAL_ENABLE = not(ENABLE_POLARITY)) then
                SERIAL_INTERFACE_STATE <= IDLE;
                INCOMING_WORD_I        <= RX_BITS;
-               CLEAR_SHIFT_REGS       <= '1';
              else
                if (SERIAL_CLOCK = not(CLOCK_POLARITY)) then
                  SERIAL_INTERFACE_STATE <= CLK_LO;
                else
                  SERIAL_INTERFACE_STATE <= CLK_HI;
                end if;
-               CLEAR_SHIFT_REGS <= '0';
              end if;
           end case;
         end if;
