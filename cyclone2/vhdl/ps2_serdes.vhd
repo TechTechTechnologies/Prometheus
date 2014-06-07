@@ -1,3 +1,14 @@
+--Uses files:
+--ps2_serdes.vhd
+--feedback_controller.vhd
+--utilities.vhd
+--shift_register.vhd
+--external_feedback_shift_register.vhd
+--clock_controller.vhd
+--boot_controller.vhd
+--ps2utils.vhd
+--spi_serdes_ps2.vhd
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
