@@ -84,11 +84,12 @@ begin
           case (SERIAL_INTERFACE_STATE) is
             when IDLE =>
               INCOMING_WORD_VALID_I <= '0';
+              CLOCK_COUNTER <= (others => '0');
+              BIT_COUNTER   <= (others => '0');              
               if (PS2_CLOCK = CLOCK_POLARITY) then
                 SERIAL_INTERFACE_STATE <= CLK_HI;
               else
-                CLOCK_COUNTER <= (others => '0');
-                BIT_COUNTER   <= (others => '0');
+                SERIAL_INTERFACE_STATE <= IDLE;
               end if;
 
             when CLK_HI =>

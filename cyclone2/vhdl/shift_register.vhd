@@ -43,10 +43,10 @@ begin
          else
             if (STEP = '1') then        
               if (DIRECTION = '1') then
-                BITS_REG                 <= XSLL(BITS_REG, 1); 
+                BITS_REG                 <= std_logic_vector(unsigned(BITS_REG) sll 1); 
                 BITS_REG(BITS_REG'right) <= NEXT_BIT;
               else
-                BITS_REG                 <= XSRL(BITS_REG, 1); 
+                BITS_REG                 <= std_logic_vector(unsigned(BITS_REG) srl 1); 
                 BITS_REG(BITS_REG'left)  <= NEXT_BIT;
               end if;
             else 
@@ -71,7 +71,7 @@ begin
             BITS_REG <= BITS_IN;
           else
             if (STEP = '1') then        
-              BITS_REG                 <= XSLL(BITS_REG, 1); 
+              BITS_REG                 <= std_logic_vector(unsigned(BITS_REG) sll 1); 
               BITS_REG(BITS_REG'right) <= NEXT_BIT;
             else 
               BITS_REG <= BITS_REG;
@@ -95,7 +95,7 @@ begin
             BITS_REG <= BITS_IN;
           else
             if (STEP = '1') then  
-              BITS_REG                 <= XSRL(BITS_REG, 1); 
+              BITS_REG                 <= std_logic_vector(unsigned(BITS_REG) srl 1); 
               BITS_REG(BITS_REG'left)  <= NEXT_BIT;
             else 
               BITS_REG <= BITS_REG;

@@ -69,6 +69,10 @@ architecture BEHAVIORAL of PS2_KEYBOARD is
   signal TAPS0_I  : std_logic_vector (11 downto 0);
   signal TAPS1_I  : std_logic_vector (11 downto 0);
   signal TAPS2_I  : std_logic_vector (11 downto 0);
+
+  signal NTAPS0   : std_logic_vector (11 downto 0);
+  signal NTAPS1   : std_logic_vector (11 downto 0);
+  signal NTAPS2   : std_logic_vector (11 downto 0);
   
   signal DATA     : std_logic_vector (10 downto 0); --8 downto 1
   
@@ -84,6 +88,13 @@ begin
   TAPS0 <= TAPS0_I;
   TAPS1 <= TAPS1_I;
   TAPS2 <= TAPS2_I;
+
+  SCAN_LOOKUP :
+  for I in 0 to 11 generate
+    NTAPS0(I) <= KTYPE when (KEY = taps_k0(I)) else TAPS0_I(i);
+    NTAPS1(I) <= KTYPE when (KEY = taps_k1(I)) else TAPS1_I(i);
+    NTAPS2(I) <= KTYPE when (KEY = taps_k2(I)) else TAPS2_I(i);  
+  end generate SCAN_LOOKUP;
   
   SCAN_DECODE:
   process (CLOCK) is 
@@ -96,22 +107,14 @@ begin
         KTYPE <= '1';
         EXT <= '0';
       elsif(IN_VALID = '1') then
+        TAPS0_I <= NTAPS0;
+        TAPS1_I <= NTAPS1;
+        TAPS2_I <= NTAPS2;
         if (KEY = X"F0") then
           KTYPE <= '0';
         elsif (KEY = X"E0") then
           EXT <= '1';
-        else
-          for I in 0 to 11 loop
-            if(KEY = taps_k0(I)) then
-              TAPS0_I(I) <= KTYPE;
-            end if;
-            if(KEY = taps_k1(I)) then
-              TAPS1_I(I) <= KTYPE;
-            end if;
-            if(KEY = taps_k2(I)) then
-              TAPS2_I(I) <= KTYPE;
-            end if;
-          end loop;
+        else          
           KTYPE <= '1';
           EXT <= '0';
         end if;
