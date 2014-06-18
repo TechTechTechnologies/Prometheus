@@ -1,6 +1,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.std_logic_unsigned.all;
 
 use work.key_config.all;
 
@@ -8,7 +9,6 @@ entity prom1max is
   port
   (
     CLOCK : in std_logic;
-    RESET_IN : in std_logic := '0';
     FSR_OUT : out std_logic_vector (2 downto 0);
     
     RST_OUT : out std_logic;
@@ -114,6 +114,9 @@ architecture BEHAVIORAL of prom1max is
   component PS2_KEYBOARD is
     generic
     (
+      WAIT_TIME : natural range 1 to natural'high := 4;
+      BUFFER_LENGTH   : natural range 11 to natural'high := 33;   
+      
       --                      Z      X      C      A      S      D      Q      W      E      1      2      3        
       taps_k2 : tap_keys := (X"1A", X"22", X"21", X"1C", X"1B", X"23", X"15", X"1d", X"24", X"16", X"1E", X"26");
       --                      V      B      N      F      G      H      R      T      Y      4      5      6       
@@ -124,12 +127,15 @@ architecture BEHAVIORAL of prom1max is
     port
     (
       CLOCK     : in std_logic;
-      RESET               : in std_logic;
+      RESET     : in std_logic;
       
       PS2_DATA  : inout std_logic;
       PS2_CLOCK : in std_logic;
 
-      KEYOUT : out std_logic_vector (7 downto 0);
+      KEYOUT : out std_logic_vector (23 downto 0);
+      BUFFER_OUT : out std_logic_vector (BUFFER_LENGTH-1 downto 0);
+      
+      STATUS     : out std_logic_vector(4 downto 0);
       
       TAPS0     : out std_logic_vector (11 downto 0);
       TAPS1     : out std_logic_vector (11 downto 0);
@@ -150,23 +156,49 @@ architecture BEHAVIORAL of prom1max is
   signal TAPS1 : std_logic_vector(11 downto 0);
   signal TAPS2 : std_logic_vector(11 downto 0);
   
-  signal KEYOUT : std_logic_vector(7 downto 0);
+  signal KEYOUT : std_logic_vector(23 downto 0);
+  signal BUFFER_OUT : std_logic_vector (32 downto 0);
+  
+  signal LED_BUFFER : std_logic_vector (7 downto 0);
+  signal LFSR_STATUS : std_logic_vector (7 downto 0) := X"00";
+  signal PS2_STATUS  : std_logic_vector (4 downto 0);
 begin
 
-  RESET <= not RESET_IN;
+--  RESET <= not RESET_IN;
+
+  RESET <= '0' when (BUTTON(0) = '1') else '1';
 
   FSR_OUT <= F_OUT;
 	
 	RST_OUT <= L0_RESET;
 	
-  LED <= KEYOUT (7 downto 0);
+  LFSR_STATUS(0) <= '0' when (TAPS0 = X"000") else '1';
+  LFSR_STATUS(1) <= '0' when (TAPS1 = X"000") else '1';
+  LFSR_STATUS(2) <= '0' when (TAPS2 = X"000") else '1';
+  LFSR_STATUS(7 downto 3) <= PS2_STATUS;
+  
+  --LED <= KEYOUT (7 downto 0) when (BUTTON = not X"0") else KEYOUT (15 downto 8) when (BUTTON = not X"1") else KEYOUT(23 downto 16) when (BUTTON = not X"2") else X"FF";
+  -- 30 downto 23, 19 downto 12, 8 downto 1
+  LED_BUFFER <= BUFFER_OUT (30 downto 23) when (BUTTON(3 downto 1) = B"110") else
+                BUFFER_OUT (19 downto 12) when (BUTTON(3 downto 1) = B"101") else
+                BUFFER_OUT (8 downto 1)   when (BUTTON(3 downto 1) = B"011") else
+                LFSR_STATUS               when (BUTTON(3 downto 1) = B"111") else
+                X"00";
+  
+  LED <= not LED_BUFFER;
+  
+  --LED(2 downto 0) <= F_OUT(2 downto 0);
+  --LED(7 downto 3) <= KEYOUT(7 downto 3);
   
   KEYBOARD : PS2_KEYBOARD 
     port map
     (
       CLOCK => CLOCK,
-      RESET => not BUTTON(0),
+      --RESET => not BUTTON(0),
+      RESET => RESET,
       KEYOUT => KEYOUT,
+      BUFFER_OUT => BUFFER_OUT,
+      STATUS => PS2_STATUS,
       PS2_DATA => PS2_DATA,
       PS2_CLOCK => PS2_CLK,
       TAPS0 => TAPS0,
